@@ -14,13 +14,16 @@ namespace ExcelSolver.Services
         /// </summary>
         private static readonly DerivativesService derivativesService;
 
+        private int nCandidate = 0;
+        private int[] iCandidate;
+
         /// <summary>
         /// Подсчитывает значения функций ограничений и целевой функции
         /// </summary>
         /// <param name="g">массив функций</param>
         /// <param name="x">массив значений</param>
         /// <returns>Массив значений ограничений и целевой функции</returns>
-        private static double[] gCompute(Func<double[], double>[] g, double[] x)
+        private double[] gCompute(Func<double[], double>[] g, double[] x)
         {
             List<double> result = new List<double>();
             foreach (Func<double[], double> gi in g)
@@ -30,22 +33,19 @@ namespace ExcelSolver.Services
         }
 
         /// <summary>
-        /// Вычисление значений производных для каждой из переменных методом конечно разностной аппроксимации
+        /// Вычисление значений производных для каждой из переменных
         /// </summary>
         /// <param name="g">Функция для которой нужно вычислить значений производной</param>
         /// <param name="x">Значения точек в которых нужно вычислить производную</param>
-        /// <param name="sheme">Тип схемы аппроксимации</param>
         /// <param name="h">шаг пространственной сетки</param>
         /// <returns>Массив значений производных функций в точках</returns>
-        private static double[][] parsh(Func<double[], double>[] function, double[] x, ApproximationScheme sheme = ApproximationScheme.Explicit, double h = 0.0001)
+        private double[][] parsh(Func<double[], double>[] function, double[] x, double h = 0.0001)
         {
             double[][] derivativeValuesForXForFunc = new double[function.Length][];
-            double[] xPlusH = new double[x.Length];
-            double[] xMinusH = new double[x.Length];
 
             for (int i = 0; i < function.Length; i++)
             {
-                derivativeValuesForXForFunc[i] = derivativesService.DerivativeValues(function[i], x, sheme, h);
+                derivativeValuesForXForFunc[i] = derivativesService.DerivativeValues(function[i], x, h);
             }
 
             return derivativeValuesForXForFunc;
@@ -59,10 +59,10 @@ namespace ExcelSolver.Services
         /// <param name="g">Список функций с ограничениями и минимизируемой функции</param>
         /// <param name="x">Список значений переменных</param>
         /// <param name="LV">индекс базовой переменной на ее границе</param>
-        private static void computeBasisInverse(double[] iCandidate, int n, Func<double[], double>[] g, double[] x, int LV)
+        private void computeBasisInverse(Func<double[], double>[] g, double[] x, int LV)
         {
             int ICT = 0;
-            int[] ignore = new int[n];
+            int[] ignore = new int[nCandidate];
             for (int i = 0; i < ignore.Length; i++)
                 ignore[i] = 0;
 
@@ -98,7 +98,7 @@ namespace ExcelSolver.Services
 
                 int mode = 1;
 
-                if (iCandidate.Length == n)
+                if (iCandidate.Length == nCandidate)
                     mode = 2;
 
                 do
@@ -165,6 +165,18 @@ namespace ExcelSolver.Services
 
 
             //построить индексный набор небазисных переменных
+        }
+
+        public void grg(Func<double[], double>[] g, double[] x)
+        {
+            gCompute(g, x);
+            if (nCandidate==0)
+            {
+                iCandidate = new int[g.Length];
+                for (int i = 0; i < g.Length; i++)
+                    iCandidate[i] = i;
+                nCandidate = g.Length;
+            }
         }
     }
 }
