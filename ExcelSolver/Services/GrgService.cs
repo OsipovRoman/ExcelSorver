@@ -16,6 +16,14 @@ namespace ExcelSolver.Services
 
         private int nCandidate = 0;
         private int[] iCandidate;
+        /// <summary>
+        /// Индексы ограничений которые нарушают верхнюю границу
+        /// </summary>
+        private int[] iAbove;
+        /// <summary>
+        /// Индексы ограничений которые нарушают нижнюю границу
+        /// </summary>
+        private int[] iBelove;
 
         /// <summary>
         /// Подсчитывает значения функций ограничений и целевой функции
@@ -59,7 +67,7 @@ namespace ExcelSolver.Services
         /// <param name="g">Список функций с ограничениями и минимизируемой функции</param>
         /// <param name="x">Список значений переменных</param>
         /// <param name="LV">индекс базовой переменной на ее границе</param>
-        private void computeBasisInverse(Func<double[], double>[] g, double[] x, int LV)
+        private void CONSBS(Func<double[], double>[] g, double[] x, int LV)
         {
             int ICT = 0;
             int[] ignore = new int[nCandidate];
@@ -78,7 +86,7 @@ namespace ExcelSolver.Services
             {
                 //Хранить градиенты связанных ограничений в массиве TAB
 
-                //сортировать переменные в порядке возрастания Z (J)
+                //сортировать переменные в порядке возрастания Z (J) где Z(J) = min{((X(J)-LB(J)), ((UB(J)-X(J)))}
 
                 //IREM - список строк, еще не
                 int[] IREM = new int[NB];
@@ -177,6 +185,10 @@ namespace ExcelSolver.Services
                     iCandidate[i] = i;
                 nCandidate = g.Length;
             }
+
+            CONSBS(g, x, 0);
+
+
         }
     }
 }
